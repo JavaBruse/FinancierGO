@@ -8,14 +8,15 @@ import (
 )
 
 type CBRHandler struct {
-	Service *services.CBRService
+	Service services.ICBRService
 }
 
 func (h *CBRHandler) GetKeyRate(w http.ResponseWriter, r *http.Request) {
 	rate, err := h.Service.GetKeyRate()
 	if err != nil {
-		http.Error(w, "Ошибка получения ставки ЦБ: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	json.NewEncoder(w).Encode(map[string]float64{"key_rate": rate})
+
+	json.NewEncoder(w).Encode(rate)
 }

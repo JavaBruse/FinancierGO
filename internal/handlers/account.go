@@ -8,7 +8,7 @@ import (
 )
 
 type AccountHandler struct {
-	Service *services.AccountService
+	Service services.IAccountService
 }
 
 func (h *AccountHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -24,6 +24,7 @@ func (h *AccountHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(account)
 }
 

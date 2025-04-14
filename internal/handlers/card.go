@@ -8,22 +8,23 @@ import (
 )
 
 type CardHandler struct {
-	Service *services.CardService
+	Service services.ICardService
 }
 
 func (h *CardHandler) CreateCard(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		AccountID int64  `json:"account_id"`
-		CVV       string `json:"cvv"`
+		Type      string `json:"type"`
 	}
 	json.NewDecoder(r.Body).Decode(&req)
 
 	userID := middleware.GetUserID(r)
-	card, err := h.Service.CreateCard(req.AccountID, userID, req.CVV)
+	card, err := h.Service.CreateCard(userID, req.AccountID, req.Type)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]int64{"card_id": card.ID})
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(card)
 }

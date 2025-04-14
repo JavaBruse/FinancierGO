@@ -2,22 +2,35 @@ package routes
 
 import (
 	"database/sql"
+	"financierGo/config"
 	"financierGo/internal/handlers"
 	"financierGo/internal/middleware"
 	"financierGo/internal/repositories"
 	"financierGo/internal/services"
 	"financierGo/internal/utils"
+
 	"github.com/gorilla/mux"
-	"os"
 )
 
 func RegisterRoutes(r *mux.Router) {
-	db, _ := sql.Open("postgres", os.Getenv("DB_URL"))
+	// Загрузка конфигурации
+	cfg, err := config.Load()
+	if err != nil {
+		panic("Failed to load configuration: " + err.Error())
+	}
+
+	// Подключение к базе данных
+	connStr := cfg.Database.URL + "?sslmode=disable"
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		panic("Failed to connect to database: " + err.Error())
+	}
+
 	userRepo := &repositories.UserRepository{DB: db}
 	userService := &services.UserService{Repo: userRepo}
 	authHandler := &handlers.AuthHandler{Service: userService}
 
-	utils.SetJWTSecret(os.Getenv("JWT_SECRET"))
+	utils.SetJWTSecret(cfg.JWT.Secret)
 
 	r.HandleFunc("/register", authHandler.Register).Methods("POST")
 	r.HandleFunc("/login", authHandler.Login).Methods("POST")
@@ -65,5 +78,4 @@ func RegisterRoutes(r *mux.Router) {
 
 	cbrHandler := &handlers.CBRHandler{Service: &services.CBRService{}}
 	api.HandleFunc("/cbr/key-rate", cbrHandler.GetKeyRate).Methods("GET")
-
 }

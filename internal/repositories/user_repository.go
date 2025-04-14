@@ -10,12 +10,12 @@ type UserRepository struct {
 }
 
 func (r *UserRepository) Create(user *models.User) error {
-	query := `INSERT INTO users (username, email, password, created_at) VALUES ($1, $2, $3, NOW()) RETURNING id`
+	query := `INSERT INTO users (username, email, password_hash, created_at) VALUES ($1, $2, $3, NOW()) RETURNING id`
 	return r.DB.QueryRow(query, user.Username, user.Email, user.Password).Scan(&user.ID)
 }
 
 func (r *UserRepository) FindByEmail(email string) (*models.User, error) {
-	query := `SELECT id, username, email, password, created_at FROM users WHERE email = $1`
+	query := `SELECT id, username, email, password_hash, created_at FROM users WHERE email = $1`
 	row := r.DB.QueryRow(query, email)
 
 	var user models.User

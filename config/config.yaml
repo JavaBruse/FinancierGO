@@ -1,0 +1,9 @@
+database:
+  url: "postgres://postgres:postgres@localhost:5432/financier"
+server:
+  port: "8189"
+jwt:
+  secret: "your-secret-key"
+smtp:
+  user: ""
+  pass: "" 
