@@ -13,11 +13,11 @@ type IUserService interface {
 }
 
 type ICardService interface {
-	CreateCard(userID int64, accountID int64, cardType string) (*models.Card, error)
+	CreateCard(userID int64, accountID int64, cvv string) (*models.Card, error)
 }
 
 type ICreditService interface {
-	CreateCredit(userID int64, amount float64, term int, rate float64) (*models.Credit, error)
+	CreateCredit(accountID int64, amount, rate float64, months int) (*models.Credit, error)
 	GetSchedule(creditID int64, userID int64) ([]models.Payment, error)
 }
 

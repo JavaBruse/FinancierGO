@@ -2,13 +2,14 @@ package handlers
 
 import (
 	"encoding/json"
+	"net/http"
+
 	"financierGo/internal/middleware"
 	"financierGo/internal/services"
-	"net/http"
 )
 
 type AccountHandler struct {
-	Service services.IAccountService
+	Service *services.AccountService
 }
 
 func (h *AccountHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -24,7 +25,6 @@ func (h *AccountHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(account)
 }
 

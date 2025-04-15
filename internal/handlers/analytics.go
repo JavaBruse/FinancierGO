@@ -7,51 +7,42 @@ import (
 
 	"financierGo/internal/middleware"
 	"financierGo/internal/services"
-
-	"github.com/gorilla/mux"
 )
 
 type AnalyticsHandler struct {
-	Service services.IAnalyticsService
+	Service *services.AnalyticsService
 }
 
 func (h *AnalyticsHandler) Stats(w http.ResponseWriter, r *http.Request) {
-	userID := middleware.GetUserID(r)
-	stats, err := h.Service.GetStats(userID)
+	accountID := middleware.GetUserID(r) // либо из запроса, как path param
+	income, expense, err := h.Service.MonthlyStats(accountID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	json.NewEncoder(w).Encode(stats)
+	json.NewEncoder(w).Encode(map[string]float64{
+		"income":  income,
+		"expense": expense,
+	})
 }
 
 func (h *AnalyticsHandler) CreditLoad(w http.ResponseWriter, r *http.Request) {
-	userID := middleware.GetUserID(r)
-	load, err := h.Service.GetCreditLoad(userID)
+	accountID := middleware.GetUserID(r)
+	debt, err := h.Service.CreditLoad(accountID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	json.NewEncoder(w).Encode(load)
+	json.NewEncoder(w).Encode(map[string]float64{"debt": debt})
 }
 
 func (h *AnalyticsHandler) Predict(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	accountID, err := strconv.ParseInt(vars["accountId"], 10, 64)
+	accountID := middleware.GetUserID(r)
+	days, _ := strconv.Atoi(r.URL.Query().Get("days"))
+	amount, err := h.Service.PredictBalance(accountID, days)
 	if err != nil {
-		http.Error(w, "invalid account ID", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	userID := middleware.GetUserID(r)
-	prediction, err := h.Service.Predict(accountID, userID)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(prediction)
+	json.NewEncoder(w).Encode(map[string]float64{"planned_expense": amount})
 }

@@ -5,5 +5,7 @@ server:
 jwt:
   secret: "your-secret-key"
 smtp:
+  host: ""
+  port: ""
   user: ""
-  pass: "" 
+  pass: ""

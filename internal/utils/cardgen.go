@@ -10,13 +10,11 @@ func GenerateCardNumber() string {
 	rand.Seed(time.Now().UnixNano())
 	base := make([]int, 15)
 
-	// Префикс: Visa 4***
 	base[0] = 4
 	for i := 1; i < 15; i++ {
 		base[i] = rand.Intn(10)
 	}
 
-	// Алгоритм Луна для контрольной суммы
 	sum := 0
 	for i := 0; i < 15; i++ {
 		n := base[i]

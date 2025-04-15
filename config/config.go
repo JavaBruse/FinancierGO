@@ -1,50 +1,44 @@
 package config
 
 import (
-	"os"
-
 	"gopkg.in/yaml.v3"
+	"io/ioutil"
+	"log"
 )
 
-type DatabaseConfig struct {
-	URL string `yaml:"url"`
-}
-
-type ServerConfig struct {
-	Port string `yaml:"port"`
-}
-
-type JWTConfig struct {
-	Secret string `yaml:"secret"`
-}
-
-type SMTPConfig struct {
-	User string `yaml:"user"`
-	Pass string `yaml:"pass"`
-}
-
+// Структура конфига
 type Config struct {
-	Database DatabaseConfig `yaml:"database"`
-	Server   ServerConfig   `yaml:"server"`
-	JWT      JWTConfig      `yaml:"jwt"`
-	SMTP     SMTPConfig     `yaml:"smtp"`
+	Database struct {
+		URL string `yaml:"url"`
+	} `yaml:"database"`
+	Server struct {
+		Port string `yaml:"port"`
+	} `yaml:"server"`
+	JWT struct {
+		Secret string `yaml:"secret"`
+	} `yaml:"jwt"`
+	SMTP struct {
+		User string `yaml:"user"`
+		Pass string `yaml:"pass"`
+		Port string `yaml:"port"`
+		Host string `yaml:"host"`
+	} `yaml:"smtp"`
 }
 
-func Load() (*Config, error) {
-	// Читаем конфигурационный файл
-	data, err := os.ReadFile("config/config.yaml")
+var AppConfig *Config
+
+// Загрузка и парсинг YAML-файла
+func Load() *Config {
+	data, err := ioutil.ReadFile("config/config.yaml")
 	if err != nil {
-		return nil, err
+		log.Fatalf("Ошибка чтения config.yaml: %v", err)
 	}
 
-	// Создаем конфигурацию
-	cfg := &Config{}
-
-	// Парсим YAML
-	err = yaml.Unmarshal(data, cfg)
-	if err != nil {
-		return nil, err
+	var cfg Config
+	if err := yaml.Unmarshal(data, &cfg); err != nil {
+		log.Fatalf("Ошибка парсинга YAML: %v", err)
 	}
 
-	return cfg, nil
+	AppConfig = &cfg
+	return AppConfig
 }

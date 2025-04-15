@@ -9,6 +9,14 @@ type AccountRepository struct {
 	DB *sql.DB
 }
 
+func (r *AccountRepository) GetUserEmail(accountID int64) string {
+	query := `SELECT u.email FROM users u 
+			  JOIN accounts a ON a.user_id = u.id WHERE a.id = $1`
+	var email string
+	_ = r.DB.QueryRow(query, accountID).Scan(&email)
+	return email
+}
+
 func (r *AccountRepository) Create(account *models.Account) error {
 	query := `INSERT INTO accounts (user_id, number, balance, currency, created_at) 
 			  VALUES ($1, $2, $3, $4, NOW()) RETURNING id`
@@ -31,12 +39,4 @@ func (r *AccountRepository) GetByID(accountID int64) (*models.Account, error) {
 func (r *AccountRepository) UpdateBalance(accountID int64, newBalance float64) error {
 	_, err := r.DB.Exec(`UPDATE accounts SET balance = $1 WHERE id = $2`, newBalance, accountID)
 	return err
-}
-
-func (r *AccountRepository) GetUserEmail(accountID int64) string {
-	query := `SELECT u.email FROM users u 
-			  JOIN accounts a ON a.user_id = u.id WHERE a.id = $1`
-	var email string
-	_ = r.DB.QueryRow(query, accountID).Scan(&email)
-	return email
 }

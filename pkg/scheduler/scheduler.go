@@ -1,11 +1,13 @@
 package scheduler
 
 import (
-	"financierGo/internal/repositories"
 	"financierGo/internal/utils"
 	"fmt"
-	"log"
 	"time"
+
+	"github.com/sirupsen/logrus"
+
+	"financierGo/internal/repositories"
 )
 
 type CreditScheduler struct {
@@ -24,7 +26,7 @@ func (s *CreditScheduler) Start(interval time.Duration) {
 }
 
 func (s *CreditScheduler) processPayments() {
-	log.Println("[Scheduler] Checking for due payments...")
+	logrus.Infof("[Scheduler] Checking for due payments...")
 
 	credits, _ := s.CreditRepo.GetAll()
 	now := time.Now()
@@ -42,7 +44,7 @@ func (s *CreditScheduler) processPayments() {
 					credit.Remaining -= sched.Amount
 					s.AccountRepo.UpdateBalance(account.ID, account.Balance)
 					s.ScheduleRepo.MarkPaid(sched.ID)
-					log.Printf("Списано %.2f по кредиту %d", sched.Amount, credit.ID)
+					logrus.Warnf("Списано %.2f по кредиту %d", sched.Amount, credit.ID)
 				} else {
 					// штраф
 					penalty := sched.Amount * 0.1
@@ -53,7 +55,7 @@ func (s *CreditScheduler) processPayments() {
 					body := fmt.Sprintf("Здравствуйте! На вашем счете недостаточно средств для оплаты кредита. Начислен штраф +10%%. Сумма: %.2f руб.", penalty)
 					err := utils.SendEmail(userEmail, "Просрочка по кредиту", body)
 					if err != nil {
-						log.Println("Ошибка отправки email:", err)
+						logrus.WithError(err).Error("Ошибка отправки email")
 					}
 				}
 			}

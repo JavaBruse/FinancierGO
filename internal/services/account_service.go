@@ -2,11 +2,12 @@ package services
 
 import (
 	"errors"
-	"financierGo/internal/models"
-	"financierGo/internal/repositories"
 	"fmt"
 	"math/rand"
 	"time"
+
+	"financierGo/internal/models"
+	"financierGo/internal/repositories"
 )
 
 type AccountService struct {
@@ -40,14 +41,25 @@ func (s *AccountService) Transfer(fromID, toID int64, amount float64, userID int
 		return errors.New("invalid destination account")
 	}
 
-	from.Balance -= amount
-	to.Balance += amount
-
-	err = s.Repo.UpdateBalance(from.ID, from.Balance)
+	tx, err := s.Repo.DB.Begin()
 	if err != nil {
 		return err
 	}
-	return s.Repo.UpdateBalance(to.ID, to.Balance)
+	defer tx.Rollback()
+
+	from.Balance -= amount
+	to.Balance += amount
+
+	_, err = tx.Exec(`UPDATE accounts SET balance = $1 WHERE id = $2`, from.Balance, from.ID)
+	if err != nil {
+		return err
+	}
+	_, err = tx.Exec(`UPDATE accounts SET balance = $1 WHERE id = $2`, to.Balance, to.ID)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit()
 }
 
 func generateAccountNumber() string {

@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"financierGo/internal/services"
 	"financierGo/internal/utils"
-	"financierGo/pkg/logger"
 	"net/http"
+	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 type AuthHandler struct {
-	Service services.IUserService
+	Service *services.UserService
 }
 
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
@@ -18,20 +20,27 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
-	json.NewDecoder(r.Body).Decode(&req)
 
-	// Логируем попытку регистрации
-	logger.LogUserAction(0, "REGISTER", "Attempting to register user: "+req.Email)
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		logrus.WithError(err).Warn("Ошибка разбора тела запроса")
+		http.Error(w, "Неверный формат запроса", http.StatusBadRequest)
+		return
+	}
 
 	user, err := h.Service.Register(req.Username, req.Email, req.Password)
 	if err != nil {
-		logger.LogError(0, "REGISTER", err.Error())
+		logrus.WithError(err).Error("Ошибка при регистрации")
+
+		if strings.Contains(err.Error(), "pq:") {
+			http.Error(w, "Ошибка базы данных", http.StatusInternalServerError)
+			return
+		}
+
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// Логируем успешную регистрацию
-	logger.LogDBWrite("users", user.ID, "New user registered: "+req.Email)
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(user)
 }
 
@@ -42,18 +51,12 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	json.NewDecoder(r.Body).Decode(&req)
 
-	// Логируем попытку входа
-	logger.LogUserAction(0, "LOGIN", "Attempting to login: "+req.Email)
-
 	user, err := h.Service.Login(req.Email, req.Password)
 	if err != nil {
-		logger.LogError(0, "LOGIN", "Unauthorized access attempt: "+req.Email)
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	// Логируем успешный вход
-	logger.LogUserAction(user.ID, "LOGIN", "Successfully logged in")
 	token, _ := utils.GenerateJWT(user.ID)
 	json.NewEncoder(w).Encode(map[string]string{"token": token})
 }
