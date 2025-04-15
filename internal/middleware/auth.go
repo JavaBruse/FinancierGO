@@ -2,14 +2,11 @@ package middleware
 
 import (
 	"context"
+	"financierGo/internal/constants"
 	"financierGo/internal/utils"
 	"net/http"
 	"strings"
 )
-
-type key string
-
-const UserKey key = "user_id"
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -18,7 +15,6 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
 		}
-
 		token := strings.TrimPrefix(authHeader, "Bearer ")
 		userID, err := utils.ParseJWT(token)
 		if err != nil {
@@ -26,11 +22,13 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), UserKey, userID)
+		// Создаем новый контекст с user_id
+		ctx := context.WithValue(r.Context(), constants.UserIDKey, userID)
+		// Передаем запрос с новым контекстом
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
 func GetUserID(r *http.Request) int64 {
-	return r.Context().Value(UserKey).(int64)
+	return r.Context().Value(constants.UserIDKey).(int64)
 }

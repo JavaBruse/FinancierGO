@@ -22,11 +22,15 @@ func RegisterRoutes(r *mux.Router) {
 
 	utils.SetJWTSecret(cfg.JWT.Secret)
 
+	// Публичные маршруты
 	r.HandleFunc("/register", authHandler.Register).Methods("POST")
 	r.HandleFunc("/login", authHandler.Login).Methods("POST")
 
+	// Защищенные маршруты
 	api := r.PathPrefix("/api").Subrouter()
 	api.Use(middleware.AuthMiddleware)
+	api.Use(middleware.LoggingMiddleware)
+
 	accountRepo := &repositories.AccountRepository{DB: db}
 	accountService := &services.AccountService{Repo: accountRepo}
 	accountHandler := &handlers.AccountHandler{Service: accountService}

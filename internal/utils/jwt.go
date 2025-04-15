@@ -1,8 +1,9 @@
 package utils
 
 import (
-	"github.com/golang-jwt/jwt/v5"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 var jwtKey []byte
@@ -24,8 +25,19 @@ func ParseJWT(tokenStr string) (int64, error) {
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		return jwtKey, nil
 	})
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		return int64(claims["user_id"].(float64)), nil
+	if err != nil {
+		return 0, err
 	}
-	return 0, err
+	if !token.Valid {
+		return 0, jwt.ErrSignatureInvalid
+	}
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return 0, jwt.ErrInvalidKey
+	}
+	userID, ok := claims["user_id"].(float64)
+	if !ok {
+		return 0, jwt.ErrInvalidKey
+	}
+	return int64(userID), nil
 }

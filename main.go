@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -12,11 +13,22 @@ import (
 	"financierGo/pkg/migrations"
 	"financierGo/pkg/scheduler"
 	"financierGo/routes"
+
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 )
 
 func main() {
+	// Настройка логгера
+	logrus.SetFormatter(&logrus.TextFormatter{
+		FullTimestamp:   true,
+		TimestampFormat: "2006-01-02 15:04:05",
+		ForceColors:     true,
+		DisableColors:   false,
+	})
+	logrus.SetLevel(logrus.InfoLevel)
+	logrus.SetOutput(os.Stdout) // Явно указываем вывод в консоль
+
 	// Загрузка конфигурации
 	cfg := config.Load()
 
@@ -42,6 +54,8 @@ func main() {
 
 	// Инициализация маршрутов
 	router := mux.NewRouter()
+
+	// Регистрируем маршруты
 	routes.RegisterRoutes(router)
 
 	// Инициализация и запуск планировщика

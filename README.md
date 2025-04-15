@@ -121,7 +121,7 @@ FinancierGo/
 {
   "from_account_id": 1,
   "to_account_id": 2,
-  "amount": 150.75
+  "amount": 1500.75
 }
 ```
 
