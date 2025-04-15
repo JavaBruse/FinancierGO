@@ -16,6 +16,7 @@ type Config struct {
 	} `yaml:"server"`
 	JWT struct {
 		Secret string `yaml:"secret"`
+		HMAC   string `yaml:"hmac"`
 	} `yaml:"jwt"`
 	SMTP struct {
 		User string `yaml:"user"`

@@ -21,7 +21,7 @@ func main() {
 	cfg := config.Load()
 
 	// Подключение к базе данных
-	connStr := cfg.Database.URL + "?sslmode=disable"
+	connStr := cfg.Database.URL
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		logrus.Fatal("Failed to connect to database:", err)

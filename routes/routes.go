@@ -2,22 +2,25 @@ package routes
 
 import (
 	"database/sql"
+	"financierGo/config"
 	"financierGo/internal/handlers"
 	"financierGo/internal/middleware"
 	"financierGo/internal/repositories"
 	"financierGo/internal/services"
 	"financierGo/internal/utils"
+
 	"github.com/gorilla/mux"
-	"os"
 )
 
 func RegisterRoutes(r *mux.Router) {
-	db, _ := sql.Open("postgres", os.Getenv("DB_URL"))
+	cfg := config.Load()
+	connStr := cfg.Database.URL
+	db, _ := sql.Open("postgres", connStr)
 	userRepo := &repositories.UserRepository{DB: db}
 	userService := &services.UserService{Repo: userRepo}
 	authHandler := &handlers.AuthHandler{Service: userService}
 
-	utils.SetJWTSecret(os.Getenv("JWT_SECRET"))
+	utils.SetJWTSecret(cfg.JWT.Secret)
 
 	r.HandleFunc("/register", authHandler.Register).Methods("POST")
 	r.HandleFunc("/login", authHandler.Login).Methods("POST")

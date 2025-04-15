@@ -1,9 +1,10 @@
 database:
-  url: "postgres://postgres:postgres@localhost:5432/financier"
+  url: "postgres://postgres:postgres@localhost:5432/financier?sslmode=disable"
 server:
   port: "8189"
 jwt:
   secret: "your-secret-key"
+  hmac: "your-hmac-key"
 smtp:
   host: ""
   port: ""
