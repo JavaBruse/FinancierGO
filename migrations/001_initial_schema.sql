@@ -8,59 +8,52 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Создание таблицы счетов
-CREATE TABLE IF NOT EXISTS accounts (
+-- Таблица accounts
+CREATE TABLE accounts (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    balance DECIMAL(15,2) DEFAULT 0,
-    currency VARCHAR(3) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    user_id INTEGER REFERENCES users(id),
+    number VARCHAR(255),
+    balance DECIMAL(10,2) DEFAULT 0,
+    currency VARCHAR(3),
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Создание таблицы карт
-CREATE TABLE IF NOT EXISTS cards (
+-- Таблица transactions
+CREATE TABLE transactions (
     id SERIAL PRIMARY KEY,
-    account_id INTEGER REFERENCES accounts(id) ON DELETE CASCADE,
-    card_number VARCHAR(16) NOT NULL UNIQUE,
-    cvv VARCHAR(3) NOT NULL,
-    expiry_date DATE NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    account_id INTEGER REFERENCES accounts(id),
+    amount DECIMAL(10,2),
+    type VARCHAR(50),
+    date TIMESTAMP DEFAULT NOW()
 );
 
--- Создание таблицы кредитов
-CREATE TABLE IF NOT EXISTS credits (
+-- Таблица credits
+CREATE TABLE credits (
     id SERIAL PRIMARY KEY,
-    account_id INTEGER REFERENCES accounts(id) ON DELETE CASCADE,
-    amount DECIMAL(15,2) NOT NULL,
-    interest_rate DECIMAL(5,2) NOT NULL,
-    term_months INTEGER NOT NULL,
-    status VARCHAR(20) NOT NULL DEFAULT 'active',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    account_id INTEGER REFERENCES accounts(id),
+    amount DECIMAL(10,2),
+    rate DECIMAL(5,2),
+    months INTEGER,
+    start_date TIMESTAMP,
+    next_payment TIMESTAMP,
+    remaining DECIMAL(10,2)
 );
 
--- Создание таблицы графиков платежей
-CREATE TABLE IF NOT EXISTS payment_schedules (
+-- Таблица cards
+CREATE TABLE cards (
     id SERIAL PRIMARY KEY,
-    credit_id INTEGER REFERENCES credits(id) ON DELETE CASCADE,
-    payment_date DATE NOT NULL,
-    principal_amount DECIMAL(15,2) NOT NULL,
-    interest_amount DECIMAL(15,2) NOT NULL,
-    total_amount DECIMAL(15,2) NOT NULL,
-    status VARCHAR(20) NOT NULL DEFAULT 'pending',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    account_id INTEGER REFERENCES accounts(id),
+    encrypted TEXT,
+    cvv_hash TEXT,
+    hmac TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Создание таблицы транзакций
-CREATE TABLE IF NOT EXISTS transactions (
+-- Таблица payment_schedules
+CREATE TABLE payment_schedules (
     id SERIAL PRIMARY KEY,
-    from_account_id INTEGER REFERENCES accounts(id),
-    to_account_id INTEGER REFERENCES accounts(id),
-    amount DECIMAL(15,2) NOT NULL,
-    type VARCHAR(20) NOT NULL,
-    status VARCHAR(20) NOT NULL DEFAULT 'completed',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-); 
+    credit_id INTEGER REFERENCES credits(id),
+    amount DECIMAL(10,2),
+    due_date TIMESTAMP,
+    paid BOOLEAN DEFAULT false
+);

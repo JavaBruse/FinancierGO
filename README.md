@@ -39,85 +39,233 @@ FinancierGo/
 └── main.go                    # Точка входа
 ```
 
-# FinancierGO
+## 🔐 Аутентификация
 
-## API Endpoints Documentation
+### `POST /register`
+Регистрация пользователя.
 
-### Authentication
-
-#### Register
-- **URL**: `/register`
-- **Method**: `POST`
-- **Body**:
+**Body:**
 ```json
 {
-    "username": "string",
-    "email": "string",
-    "password": "string"
+  "username": "johndoe",
+  "email": "john@example.com",
+  "password": "mysecret"
 }
 ```
 
-#### Login
-- **URL**: `/login`
-- **Method**: `POST`
-- **Body**:
+**Response:**
 ```json
 {
-    "email": "string",
-    "password": "string"
+  "id": 1,
+  "username": "johndoe",
+  "email": "john@example.com",
+  "created_at": "2025-04-15T12:00:00Z"
 }
 ```
 
-### Accounts (Requires Authentication)
+---
 
-#### Create Account
-- **URL**: `/api/accounts`
-- **Method**: `POST`
-- **Body**:
+### `POST /login`
+Аутентификация и получение JWT-токена.
+
+**Body:**
 ```json
 {
-    "currency": "string"
+  "email": "john@example.com",
+  "password": "mysecret"
 }
 ```
 
-#### Transfer Money
-- **URL**: `/api/transfer`
-- **Method**: `POST`
-- **Body**:
+**Response:**
 ```json
 {
-    "from_account_id": "integer",
-    "to_account_id": "integer",
-    "amount": "float"
+  "token": "JWT-TOKEN"
 }
 ```
 
-### Cards (Requires Authentication)
+---
 
-#### Create Card
-- **URL**: `/api/cards`
-- **Method**: `POST`
-- **Body**:
+## 💰 Счета
+
+### `POST /accounts`
+Создание банковского счета.
+
+**Headers:**
+`Authorization: Bearer JWT-TOKEN`
+
+**Body:**
 ```json
 {
-    "account_id": "integer",
-    "cvv": "string"
+  "currency": "RUB"
 }
 ```
 
-### Credits (Requires Authentication)
-
-#### Create Credit
-- **URL**: `/api/credits`
-- **Method**: `POST`
-- **Body**:
+**Response:**
 ```json
 {
-    "account_id": "integer",
-    "amount": "float",
-    "rate": "float",
-    "months": "integer"
+  "id": 1,
+  "user_id": 1,
+  "number": "40817810000012345678",
+  "balance": 0,
+  "currency": "RUB"
 }
+```
+
+---
+
+### `POST /transfer`
+Перевод между счетами.
+
+**Body:**
+```json
+{
+  "from_account_id": 1,
+  "to_account_id": 2,
+  "amount": 150.75
+}
+```
+
+**Response:**
+```json
+{
+  "status": "ok"
+}
+```
+
+---
+
+## 💳 Карты
+
+### `POST /cards`
+Выпуск виртуальной карты.
+
+**Body:**
+```json
+{
+  "account_id": 1,
+  "cvv": "123"
+}
+```
+
+**Response:**
+```json
+{
+  "card_id": 5
+}
+```
+
+---
+
+## 📊 Аналитика
+
+### `GET /analytics`
+Доходы и расходы за текущий месяц.
+
+**Response:**
+```json
+{
+  "income": 25000.0,
+  "expense": 17200.5
+}
+```
+
+---
+
+### `GET /analytics/credit`
+Кредитная нагрузка пользователя.
+
+**Response:**
+```json
+{
+  "debt": 82000.0
+}
+```
+
+---
+
+### `GET /accounts/{accountId}/predict?days=30`
+Прогноз расходов по кредитам за N дней.
+
+**Response:**
+```json
+{
+  "planned_expense": 5000.0
+}
+```
+
+---
+
+## 🧾 Кредиты
+
+### `POST /credits`
+Оформление кредита.
+
+**Body:**
+```json
+{
+  "account_id": 1,
+  "amount": 50000.0,
+  "rate": 10.0,
+  "months": 12
+}
+```
+
+**Response:**
+```json
+{
+  "id": 3,
+  "amount": 50000.0,
+  "remaining": 50000.0,
+  "rate": 10.0
+}
+```
+
+---
+
+### `GET /credits/{creditId}/schedule`
+Получить график платежей по кредиту.
+
+**Response:**
+```json
+[
+  {
+    "amount": 1500.0,
+    "due_date": "2025-05-15T00:00:00Z",
+    "paid": false
+  }
+]
+```
+
+---
+
+## 📡 Интеграция с ЦБ
+
+### `GET /cbr/key-rate`
+Получение ключевой ставки ЦБ РФ (+5% маржи).
+
+**Response:**
+```json
+{
+  "key_rate": 16.0
+}
+```
+
+---
+
+## 📬 Email-уведомления
+
+Email отправляется автоматически:
+- при просрочке платежа,
+- если на счете недостаточно средств,
+- через SMTP (`gomail`).
+
+---
+## 🛡️ Защищенные эндпоинты
+
+Все `/accounts`, `/transfer`, `/cards`, `/analytics`, `/credits`, `/predict` — требуют JWT в заголовке:
+
+```
+Authorization: Bearer JWT-TOKEN
 ```
 
 #### Get Credit Schedule
