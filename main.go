@@ -64,7 +64,7 @@ func main() {
 		ScheduleRepo: &repositories.PaymentScheduleRepository{DB: db},
 		AccountRepo:  &repositories.AccountRepository{DB: db},
 	}
-	go sched.Start(1 * time.Hour)
+	go sched.Start(12 * time.Hour)
 
 	// Запуск сервера
 	logrus.Infof("Server running on port %s", cfg.Server.Port)
