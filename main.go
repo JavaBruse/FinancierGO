@@ -70,19 +70,4 @@ func main() {
 	logrus.Infof("Server running on port %s", cfg.Server.Port)
 	logrus.Fatal(http.ListenAndServe(":"+cfg.Server.Port, router))
 
-	// cfg := config.Load()
-	// db, _ := sql.Open("postgres", cfg.Database.URL)
-
-	// router := mux.NewRouter()
-	// routes.RegisterRoutes(router)
-
-	// logrus.Infof("Сервер запущен на порту %s", cfg.Server.Port)
-	// logrus.Fatal(http.ListenAndServe(":"+cfg.Server.Port, router))
-
-	// sched := scheduler.CreditScheduler{
-	// 	CreditRepo:   &repositories.CreditRepository{DB: db},
-	// 	ScheduleRepo: &repositories.PaymentScheduleRepository{DB: db},
-	// 	AccountRepo:  &repositories.AccountRepository{DB: db},
-	// }
-	// sched.Start(1 * time.Hour)
 }

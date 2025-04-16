@@ -3,9 +3,12 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"financierGo/internal/middleware"
 	"financierGo/internal/services"
+
+	"github.com/gorilla/mux"
 )
 
 type AccountHandler struct {
@@ -26,6 +29,48 @@ func (h *AccountHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(account)
+}
+
+func (h *AccountHandler) Deposit(w http.ResponseWriter, r *http.Request) {
+	accountID, _ := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
+	userID := middleware.GetUserID(r)
+
+	var req struct {
+		Amount float64 `json:"amount"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Amount <= 0 {
+		http.Error(w, "Неверная сумма", http.StatusBadRequest)
+		return
+	}
+
+	err := h.Service.AdjustBalance(accountID, userID, req.Amount)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusForbidden)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+}
+
+func (h *AccountHandler) Withdraw(w http.ResponseWriter, r *http.Request) {
+	accountID, _ := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
+	userID := middleware.GetUserID(r)
+
+	var req struct {
+		Amount float64 `json:"amount"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Amount <= 0 {
+		http.Error(w, "Неверная сумма", http.StatusBadRequest)
+		return
+	}
+
+	err := h.Service.AdjustBalance(accountID, userID, -req.Amount)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusForbidden)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
 }
 
 func (h *AccountHandler) Transfer(w http.ResponseWriter, r *http.Request) {

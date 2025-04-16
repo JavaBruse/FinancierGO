@@ -144,6 +144,58 @@ FinancierGo/
 
 ---
 
+### `POST /api/accounts/{id}/deposit`
+
+Пополнение баланса банковского счета.
+
+**Headers:**
+
+`Authorization: Bearer JWT-TOKEN`
+
+**Body:**
+
+```json
+{
+  "amount": 1000.0
+}
+```
+
+**Response:**
+
+```json
+{
+  "status": "success"
+}
+```
+
+---
+
+### `POST /accounts/{id}/withdraw`
+
+Списание средств со счета.
+
+**Headers:**
+
+`Authorization: Bearer JWT-TOKEN`
+
+**Body:**
+
+```json
+{
+  "amount": 1000.0
+}
+```
+
+**Response:**
+
+```json
+{
+  "status": "success"
+}
+```
+
+---
+
 ### `POST /api/transfer`
 
 Перевод между счетами.

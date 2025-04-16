@@ -66,3 +66,17 @@ func generateAccountNumber() string {
 	rand.Seed(time.Now().UnixNano())
 	return fmt.Sprintf("40817%010d", rand.Int63n(1e10))
 }
+
+func (s *AccountService) AdjustBalance(accountID, userID int64, delta float64) error {
+	account, err := s.Repo.GetByID(accountID)
+	if err != nil || account == nil || account.UserID != userID {
+		return errors.New("нет доступа к счету")
+	}
+
+	if delta < 0 && account.Balance < -delta {
+		return errors.New("недостаточно средств")
+	}
+
+	account.Balance += delta
+	return s.Repo.UpdateBalance(account.ID, account.Balance)
+}

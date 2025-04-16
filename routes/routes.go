@@ -37,6 +37,8 @@ func RegisterRoutes(r *mux.Router) {
 
 	api.HandleFunc("/accounts", accountHandler.Create).Methods("POST")
 	api.HandleFunc("/transfer", accountHandler.Transfer).Methods("POST")
+	api.HandleFunc("/accounts/{id}/deposit", accountHandler.Deposit).Methods("POST")
+	api.HandleFunc("/accounts/{id}/withdraw", accountHandler.Withdraw).Methods("POST")
 
 	cardRepo := &repositories.CardRepository{DB: db}
 	cardService := &services.CardService{
